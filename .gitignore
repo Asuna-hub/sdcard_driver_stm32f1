@@ -1,0 +1,28 @@
+# Keil build output
+*.axf
+*.d
+*.dep
+*.htm
+*.lnp
+*.lst
+*.map
+*.o
+*.sct
+*.tra
+*.zip
+
+# Keil listings and logs
+Listings/
+Objects/
+
+# Debug
+*.uvguix.*
+*.scvd
+
+# JLink
+JLinkLog.txt
+JLinkSettings.ini
+
+# Windows
+Thumbs.db
+Desktop.ini
