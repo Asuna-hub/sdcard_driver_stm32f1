@@ -1,5 +1,8 @@
 #include "sdcard_spi.h"
 
+uint8_t is_sdhc = 0;
+uint8_t sd_initialized = 0;
+
 void SPI_Pinouts(void){
 	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
 	
@@ -101,6 +104,50 @@ void SD_endCmd(void){
 	SPI_transfer_data(0xFF);
 }
 
+uint8_t SD_Init(void){
+	SPI_LowSpeed();
+	SD_PowerUpSequence();
+	
+	uint8_t r1 = SD_SendCmd(CMD0, 0);
+	SD_endCmd();
+	if (r1 != 0x01) return 1;
+	
+	r1 = SD_SendCmd(CMD8, 0x1AA);
+	uint8_t resp[4];
+	for (int i = 0; i < 4; i++){
+		resp[i] = SPI_transfer_data(0xFF);
+	}
+	SD_endCmd();
+	if (resp[2] != 0x01 || resp[3] != 0xAA) return 1; // not SDv2
+	
+	uint32_t timeout = 50000;
+	do {
+		SD_SendCmd(CMD55, 0);
+		SD_endCmd();
+		
+		r1 = SD_SendCmd(ACMD41, 0x40000000);
+		SD_endCmd();
+		
+		timeout--;
+	} while (r1 != 0x00 && timeout > 0);
+	if (timeout == 0) return 1;
+	
+	r1 = SD_SendCmd(CMD58, 0);
+	if (r1 != 0x00){
+		SD_endCmd();
+		return 1;
+	}
+	uint8_t ocr[4];
+	for (int i = 0; i < 4; i++){
+		ocr[i] = SPI_transfer_data(0xFF);
+	}
+	SD_endCmd();
+	is_sdhc = (ocr[0] & 0x40) ? 1 : 0;
+	
+	SPI_HighSpeed();
+	return 0;
+}
+
 uint8_t SD_ReadBlock(uint8_t *buf, uint32_t lba){
 	if (!is_sdhc) lba <<= 9;
 	
@@ -163,5 +210,6 @@ uint8_t SD_WriteBlock(const uint8_t *buf, uint32_t lba){
 	if (busy != 0xFF) return 1;
 	return 0;
 }
+
 
 
