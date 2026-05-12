@@ -78,27 +78,90 @@ uint8_t SD_SendCmd(uint8_t cmd, uint32_t arg){
 	} while (r != 0xFF && --timeout);
 	
 	SPI_transfer_data(cmd | 0x40);
-	
-	SPI_transfer_data((arg >> 24) & 0xFF);
-	SPI_transfer_data((arg >> 16) & 0xFF);
-	SPI_transfer_data((arg >> 8) & 0xFF);
-	SPI_transfer_data(arg & 0xFF);
+	for (int i = 3; i >= 0; i--){
+		SPI_transfer_data((arg >> (i * 8) & 0xFF));
+	}
 	
 	uint8_t crc = 0xFF;
 	if (cmd == CMD0) crc = 0x95;
 	else if (cmd == CMD8) crc = 0x87;
 	SPI_transfer_data(crc); 
 	uint8_t count = 0;
-	uint8_t r1;
+	uint8_t rr;
 	do {
-		r1 = SPI_transfer_data(0xFF);
+		rr = SPI_transfer_data(0xFF);
 		count++;
-	} while ((r1 & 0x80) && count < 8);
+	} while ((rr & 0x80) && count < 8);
 	
-	return r1;
+	return rr;
 }
 
 void SD_endCmd(void){
 	SD_CS_High();
 	SPI_transfer_data(0xFF);
 }
+
+uint8_t SD_ReadBlock(uint8_t *buf, uint32_t lba){
+	if (!is_sdhc) lba <<= 9;
+	
+	uint8_t r17 = SD_SendCmd(CMD17, lba);
+	if (r17 != 0){
+		SD_endCmd();
+		return 1;
+	}
+	
+	uint8_t token;
+	uint32_t timeout = 100000;
+	do {
+		token = SPI_transfer_data(0xFF);
+		timeout--;
+	} while (token != 0xFE && timeout > 0);
+	if (token != 0xFE){
+		SD_endCmd();
+		return 1;
+	}
+	
+	for (int i = 0; i < 512; i++){
+		buf[i] = SPI_transfer_data(0xFF);
+	}
+	SPI_transfer_data(0xFF);
+	SPI_transfer_data(0xFF);
+	SD_endCmd();
+	return 0;
+}
+
+uint8_t SD_WriteBlock(const uint8_t *buf, uint32_t lba){
+	if (!is_sdhc) lba <<= 9;
+	uint8_t r24 = SD_SendCmd(CMD24, lba);
+	if (r24 != 0x00){
+		SD_endCmd();
+		return 1;
+	}
+	
+	SPI_transfer_data(0xFF);
+	SPI_transfer_data(0xFE);
+	for (int i = 0; i < 512; i++){
+		SPI_transfer_data(buf[i]);
+	}
+	
+	SPI_transfer_data(0xFF);
+	SPI_transfer_data(0xFF);
+	
+	uint8_t response = SPI_transfer_data(0xFF);
+	if ((response & 0x1F) != 0x05){
+		SD_endCmd();
+		return 1;
+	}
+	
+	uint32_t timeout = 500000;
+	uint8_t busy;
+	do {
+		busy = SPI_transfer_data(0xFF);
+		timeout--;
+	} while (busy != 0xFF && timeout > 0);
+	SD_endCmd();
+	if (busy != 0xFF) return 1;
+	return 0;
+}
+
+
