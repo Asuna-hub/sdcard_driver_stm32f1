@@ -145,6 +145,7 @@ uint8_t SD_Init(void){
 	is_sdhc = (ocr[0] & 0x40) ? 1 : 0;
 	
 	SPI_HighSpeed();
+	sd_initialized = 1;
 	return 0;
 }
 
