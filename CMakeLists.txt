@@ -21,13 +21,10 @@ enable_language(C CXX ASM)
 set(linker_script_SRC               ${PROJ_PATH}/Core/STM32F103XX_FLASH.ld)
 set(EXECUTABLE                      ${CMAKE_PROJECT_NAME})
 
-# MCU Parameters - I am storing all created profiles. Pick one to use.
-# include(STM32G431xx_HAL_PARA)
+# MCU Parameters
 include(STM32F103xx)
 
-# USE .\getIncludeList.sh and .\getSourceList.sh to generate file list
 # Include List, Source List, and MCU Sepecific Setting
-# Must Update these files in cmake/ when adding new source files
 include(SourceList)
 include(IncludeList)
 
