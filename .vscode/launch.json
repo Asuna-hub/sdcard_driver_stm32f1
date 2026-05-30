@@ -1,0 +1,48 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "OpenOCD",
+            "cwd": "${workspaceFolder}",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "device": "STM32F103C8",                 // MCU used [optional]
+            "interface": "swd",
+            "runToEntryPoint": "main",               // Run to main and stop there [optional]
+            "showDevDebugOutput": "both",
+            // Path to the OpenOCD executable (not on PATH on this machine)
+            "serverpath": "D:/Soft/OpenOCD-20260302-0.12.0/bin/openocd.exe",
+            // Directory containing OpenOCD's interface/ and target/ scripts
+            "searchDir": [
+                "D:/Soft/OpenOCD-20260302-0.12.0/share/openocd/scripts"
+            ],
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f1x.cfg"
+            ],
+            "svdFile": "STM32_svd/STM32F103.svd",     // SVD file to see registers [optional]
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            }
+        },
+        {
+            "name": "ST-Link",
+            "cwd": "${workspaceFolder}",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "stlink",
+            "interface": "swd",
+            "showDevDebugOutput": "both",
+            "v1": false,                            // ST-Link version
+            "device": "STM32F103C8",                // MCU used [optional]
+            "serialNumber": "",                     // Set ST-Link ID if you use multiple at the same time [optional]
+            "runToEntryPoint": "main",              // Run to main and stop there [optional]
+            "svdFile": "STM32_svd/STM32F103.svd",    // SVD file to see registers [optional]
+            "stm32cubeprogrammer": "D:/Soft/STM32CubeCLT_1.21.0/STM32CubeProgrammer/bin"
+        }
+    ]
+}

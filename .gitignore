@@ -1,0 +1,12 @@
+# Build output
+build/
+
+# VSCode state (keep settings/tasks/launch, ignore runtime state)
+.vscode/.cortex-debug.peripherals.state.json
+.vscode/.cortex-debug.registers.state.json
+
+# OpenOCD log
+*.log
+
+# Scripts
+*.sh
